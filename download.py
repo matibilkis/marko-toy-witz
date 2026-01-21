@@ -77,25 +77,3 @@ vol = data["Volume"]                      # shape: dates × tickers [web:95]
 vol_yearly = vol.resample("Y").sum()      # one row per year, one column per ticker
 vol_yearly.plot(kind="bar", subplots=True, layout=(5, 2), figsize=(10, 12), sharex=True)
 plt.savefig("figs/inspect_volume_yearly_subplots.png")
-
-
-
-
-
-
-### Now the question is ...  how do we allocate the weights of a portfolio...
-## *** Long-only
-     ### ---> portfolio re-balance after a couple of days or months!
-
-
-#### What's a portfolio ??? We need to choose the weights of each stock    w_i between 0,1  \sum_i w_i = 1
-### Markowitz mean-variance ----> we want to minimize w^T \sigma w - q \mu^T w for some risk tolerance q
-
-
-# Workflow
-## 1 Computer expected return (for each stock) ---> this is \mu
-## 2 Compute the covariance matrix \Sigma
-## 3 Then run the convex quadratic prorgam
-
-
-## 1 Computer expected return (for each stock) ---> this is \mu
