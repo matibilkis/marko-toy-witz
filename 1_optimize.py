@@ -20,7 +20,7 @@ data = yf.download(
     progress=True ##to see how it goes downloading
 )
 
-
+data.columns
 ### Now the question is ...  how do we allocate the weights of a portfolio...
 ## *** Long-only
      ### ---> portfolio re-balance after a couple of days or months!
@@ -63,7 +63,7 @@ plt.show()
 ### Let's check random costs
 
 random_cost=[]
-tolerances = np.logspace(0,2,num=30)
+tolerances = np.logspace(-2,2,num=50)
 for ind,q in enumerate(tqdm(tolerances)):
 
     ### let's compute a few random portfolios
@@ -74,8 +74,10 @@ for ind,q in enumerate(tqdm(tolerances)):
     random_cost.append(i)
 
 
-### We write the convex program in cvxpy
-q = tolerances[0]
+### We write the convex program in cvxpy. There are some different solvers SCS, ECOS, OSQP... we use SCS check this for details https://github.com/cvxgrp/scs
+
+
+q = tolerances[0] ## this would be "low risk"
 w = cp.Variable(len(mu))
 
 # risk and return terms
@@ -103,7 +105,7 @@ obj_opt = prob.value
 ax=plt.subplot(111)
 ax.scatter(np.arange(M),np.squeeze(random_cost)[0])
 ax.axhline(obj_opt, color="red")
-plt.savefig("figs/random_opt_and_QP_6Y_daily_q0.png")
+plt.savefig("figs/random_opt_and_QP_6Y_daily_q1e-2.png")
 
 
 ### Okay! then we have our "first" optimal portfolio :)
@@ -112,7 +114,6 @@ plt.savefig("figs/random_opt_and_QP_6Y_daily_q0.png")
 w_opt
 ### and the return is... --->
 mu.to_numpy().dot(w_opt)
-
 
 ### and the volatility is
 np.sqrt(w_opt.dot(sigma.to_numpy().dot(w_opt)))
