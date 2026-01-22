@@ -24,7 +24,8 @@ data = yf.download(
 
 
 
-def optimize_portfolio(mu,sigma, q):
+
+def optimize_portfolio(mu, sigma, q):
     """
     this function optimizs a quadracticc convex program
     mu expected risk (vector length N = number of stocks)
@@ -36,10 +37,27 @@ def optimize_portfolio(mu,sigma, q):
 
     returns optimal weights and objective value
     """
-    w = cp.Variable(len(mu))
+    # Convert to numpy if needed
+    if hasattr(mu, 'to_numpy'):
+        mu_np = mu.to_numpy()
+    else:
+        mu_np = np.array(mu)
+
+    if hasattr(sigma, 'to_numpy'):
+        sigma_np = sigma.to_numpy()
+    else:
+        sigma_np = np.array(sigma)
+
+    # FIX: Replace NaN values with 0 (can occur with insufficient data)
+    sigma_np = np.nan_to_num(sigma_np, nan=0.0)
+
+    # FIX: Ensure covariance matrix is symmetric (numerical precision issue)
+    sigma_np = (sigma_np + sigma_np.T) / 2
+
+    w = cp.Variable(len(mu_np))
     # risk and return terms
-    risk = cp.quad_form(w, sigma)          # w^T Sigma w
-    ret  = mu.to_numpy() @ w                          # mu^T w
+    risk = cp.quad_form(w, sigma_np)          # w^T Sigma w
+    ret  = mu_np @ w                          # mu^T w
 
     objective = cp.Minimize(risk - q*ret)
     constraints = [
@@ -48,7 +66,14 @@ def optimize_portfolio(mu,sigma, q):
     ]
     prob = cp.Problem(objective, constraints)
     prob.solve(solver=cp.SCS)
+
+    # Handle solver failure: return equal weights as fallback
+    if w.value is None:
+        n = len(mu_np)
+        return np.ones(n) / n, np.nan
+
     return w.value, prob.value
+
 
 
 
@@ -179,6 +204,6 @@ rebalance_dates, all_weights, all_returns, all_vols = rolling_rebalance(
     data, lookback_months=3, invest_months=1, q_selected=tolerances[idx_tol],
     start_date="2021-01-01", end_date="2025-01-01"
 )
+rebalance_dates
 
-
- ### The idea here is to take a rolling basis in which we "observe" behaviour for 3 months, "deploy that", and then update the optimal weights with a time-moving window to estimate the mu's and sigma's. but there's a bug, so let's wrap up here!
+ ### The idea here is to take a rolling basis in which we "observe" behaviour for 3 months, "deploy that", and then update the optimal weights with a time-moving window to estimate the mu's and sigma's. but there's a bug, so let's wrap up here! There's more to explore, but i'm tired now :)
